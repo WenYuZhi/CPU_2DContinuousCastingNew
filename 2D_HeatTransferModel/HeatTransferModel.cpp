@@ -7,79 +7,79 @@
 #include <stdlib.h>
 
 
-void Physicial_Parameters(float);
-float Boundary_Condition(int j, int ny, float Ly, float *, float *);
+void Physicial_Parameters(double);
+double Boundary_Condition(int j, int ny, double Ly, double *, double *);
 void Monitor_MeanTemperature(int, int, int *);
-void OnestepSolve(int nx, int ny, float tao, float dx, float dy, float* H_Init);
+void OnestepSolve(int nx, int ny, double tao, double dx, double dy, double* H_Init);
 
-float ***T;
-float **T_Last;
-float **T_New;
-float **T_HoldLast;
-float *Mean_TSurface, *Mean_TCentral;
-float Vcast = -0.02, h = 1000.0, lamd = 50.0, Ce = 540.0, pho = 7000.0, a = 1.0;
-float ccml[Section + 1] = { 0.0,0.2,0.4,0.6,0.8,1.0925,2.27,4.29,5.831,9.6065,13.6090,19.87014,28.599 };
-float Taim[Section] = { 966.149841, 925.864746, 952.322083, 932.175537, 914.607117, 890.494263, 870.804443, 890.595825 };
-float Lx = 0.125, Ly = 28.599, t_final = 1500.0, T_Cast = 1558, Tw = 30;
+double ***T;
+double **T_Last;
+double **T_New;
+double **T_HoldLast;
+double *Mean_TSurface, *Mean_TCentral;
+double Vcast = -0.02, h = 1000.0, lamd = 50.0, Ce = 540.0, pho = 7000.0, a = 1.0;
+double ccml[Section + 1] = { 0.0,0.2,0.4,0.6,0.8,1.0925,2.27,4.29,5.831,9.6065,13.6090,19.87014,28.599 };
+double Taim[Section] = { 966.149841, 925.864746, 952.322083, 932.175537, 914.607117, 890.494263, 870.804443, 890.595825 };
+double Lx = 0.125, Ly = 28.599, t_final = 2000.0, T_Cast = 1558, Tw = 30;
 
 int main()
 {
 	FILE *fp = NULL;
-	float **T_Predictive_Last;
-	float **T_Predictive_New;
-	int nx = 11, ny = 3001, tnpts = 7501, inter_num = 500, Num = 5;
-	float tao, dx, dy, dh = 1.0, arf1, arf2, step = -0.002;
-	float H_Init[Section] = { 1380,1170,980,800,1223.16,735.05,424.32,392.83,328.94,281.64,246.16,160.96 };
-	float H_Init_Temp[Section] = { 1380,1170,980,800,1223.16,735.05,424.32,392.83,328.94,281.64,246.16,160.96 };
-	float *y, **Mean_TSurfaceElement, **Mean_TSurfaceElementOne, *Delta_H_Init, **JacobianMatrix;
+	double **T_Predictive_Last;
+	double **T_Predictive_New;
+	int nx = 11, ny = 3001, tnpts = 10001, inter_num = 500, Num = 2;
+	double tao, dx, dy, dh = 1.0, arf1, arf2, step = -0.002;
+	double H_Init[Section] = { 1380,1170,980,800,1223.16,735.05,424.32,392.83,328.94,281.64,246.16,160.96 };
+	double H_Init_Temp[Section] = { 1380,1170,980,800,1223.16,735.05,424.32,392.83,328.94,281.64,246.16,160.96 };
+	double *y, **Mean_TSurfaceElement, **Mean_TSurfaceElementOne, *Delta_H_Init, **JacobianMatrix;
 	bool disout = true;
 	int Y_Label[Section + 1] = { 0 };
 
 	clock_t begin, end, duration;
 
-	y = (float*)calloc(ny, sizeof(float));
-	Mean_TSurface = (float*)calloc(Section, sizeof(float));
-	Mean_TCentral = (float*)calloc(Section, sizeof(float));
-	Delta_H_Init = (float*)calloc(CoolSection, sizeof(float));
+	y = (double*)calloc(ny, sizeof(double));
+	Mean_TSurface = (double*)calloc(Section, sizeof(double));
+	Mean_TCentral = (double*)calloc(Section, sizeof(double));
+	Delta_H_Init = (double*)calloc(CoolSection, sizeof(double));
 
-	T_New = (float**)calloc(nx, sizeof(float));
+	T_New = (double**)calloc(nx, sizeof(double));
 	for (int i = 0; i < nx; i++)
-		T_New[i] = (float*)calloc(ny, sizeof(float));
+		T_New[i] = (double*)calloc(ny, sizeof(double));
 
-	T_Last = (float**)calloc(nx, sizeof(float));
+	T_Last = (double**)calloc(nx, sizeof(double));
 	for (int i = 0; i < nx; i++)
-		T_Last[i] = (float*)calloc(ny, sizeof(float));
+		T_Last[i] = (double*)calloc(ny, sizeof(double));
 
-	T_HoldLast = (float**)calloc(nx, sizeof(float));
+	T_HoldLast = (double**)calloc(nx, sizeof(double));
 	for (int i = 0; i < nx; i++)
-		T_HoldLast[i] = (float*)calloc(ny, sizeof(float));
+		T_HoldLast[i] = (double*)calloc(ny, sizeof(double));
 
-	T_Predictive_New = (float**)calloc(nx, sizeof(float));
+	T_Predictive_New = (double**)calloc(nx, sizeof(double));
 	for (int i = 0; i < nx; i++)
-		T_Predictive_New[i] = (float*)calloc(ny, sizeof(float));
+		T_Predictive_New[i] = (double*)calloc(ny, sizeof(double));
 
-	T_Predictive_Last = (float**)calloc(nx, sizeof(float));
+	T_Predictive_Last = (double**)calloc(nx, sizeof(double));
 	for (int i = 0; i < nx; i++)
-		T_Predictive_Last[i] = (float*)calloc(ny, sizeof(float));
+		T_Predictive_Last[i] = (double*)calloc(ny, sizeof(double));
 
-	T = (float***)calloc(nx, sizeof(float));
+	T = (double***)calloc(nx, sizeof(double));
 	for (int i = 0; i < nx; i++)
-		T[i] = (float**)calloc(ny, sizeof(float));
+		T[i] = (double**)calloc(ny, sizeof(double));
 	for (int i = 0; i < nx; i++)
 		for (int j = 0; j < ny; j++)
-			T[i][j] = (float*)calloc(21, sizeof(float));
+			T[i][j] = (double*)calloc(21, sizeof(double));
 
-	Mean_TSurfaceElement = (float**)calloc(CoolSection, sizeof(float));
+	Mean_TSurfaceElement = (double**)calloc(CoolSection, sizeof(double));
 	for (int i = 0; i < CoolSection; i++)
-		Mean_TSurfaceElement[i] = (float*)calloc(CoolSection, sizeof(float));
+		Mean_TSurfaceElement[i] = (double*)calloc(CoolSection, sizeof(double));
 
-	Mean_TSurfaceElementOne = (float**)calloc(CoolSection, sizeof(float));
+	Mean_TSurfaceElementOne = (double**)calloc(CoolSection, sizeof(double));
 	for (int i = 0; i < CoolSection; i++)
-		Mean_TSurfaceElementOne[i] = (float*)calloc(CoolSection, sizeof(float));
+		Mean_TSurfaceElementOne[i] = (double*)calloc(CoolSection, sizeof(double));
 
-	JacobianMatrix = (float**)calloc(CoolSection, sizeof(float));
+	JacobianMatrix = (double**)calloc(CoolSection, sizeof(double));
 	for (int i = 0; i < CoolSection; i++)
-		JacobianMatrix[i] = (float*)calloc(CoolSection, sizeof(float));
+		JacobianMatrix[i] = (double*)calloc(CoolSection, sizeof(double));
 
 	dx = Lx / (nx - 1);
 	dy = Ly / (ny - 1);
@@ -144,8 +144,7 @@ int main()
 				{
 					for (int temp = 0; temp < Section; temp++)
 						H_Init_Temp[temp] = H_Init[temp];
-					if( PNum == 0 )
-					    H_Init_Temp[m + MoldSection] = H_Init[m + MoldSection] + dh;
+					H_Init_Temp[m + MoldSection] = H_Init[m + MoldSection] + dh;
 					OnestepSolve(nx, ny, tao, dx, dy, H_Init_Temp);
 					for (int j = 0; j < ny; j++)
 						for (int i = 0; i < nx; i++)
@@ -169,7 +168,7 @@ int main()
 			{
 				for (int column = 0; column < CoolSection; column++)
 				{
-					JacobianMatrix[row][column] = (Mean_TSurfaceElement[row][column] - Mean_TSurfaceElementOne[row][column]) / dh;
+					JacobianMatrix[row][column] = ( Mean_TSurfaceElement[row][column] - Mean_TSurfaceElementOne[row][column] ) / dh;
 					printf("%f ", JacobianMatrix[row][column]);
 				}
 				printf("\n");
@@ -189,12 +188,13 @@ int main()
 			arf1 = 0.0, arf2 = 0.0;
 			for (int temp = 0; temp < CoolSection; temp++)
 			{
-				for (int lab = 0; lab < CoolSection; lab++)
+				for (int column = 0; column < CoolSection; column++)
 				{
-					arf1 += (Mean_TSurfaceElementOne[0][temp] - Taim[temp]) * JacobianMatrix[temp][lab] * Delta_H_Init[lab];
-					arf2 += JacobianMatrix[temp][lab] * Delta_H_Init[lab] * JacobianMatrix[temp][lab] * Delta_H_Init[lab];
+					arf1 += (Mean_TSurfaceElementOne[0][temp] - Taim[temp]) * JacobianMatrix[temp][column] * Delta_H_Init[column];
+					arf2 += JacobianMatrix[temp][column] * Delta_H_Init[column] * JacobianMatrix[temp][column] * Delta_H_Init[column];
 				}
 			}
+			step = - arf1 / (arf2);
 
 				printf("\n");
 				printf(" Output time step = %d", k);
@@ -226,7 +226,7 @@ int main()
 			for (int column = MoldSection; column < Section; column++)
 			{
 				fprintf(fp, "%f ", Mean_TSurface[column]);
-				fprintf(fp, "%f, ", H_Init[column]);
+				fprintf(fp, "%f ", H_Init[column]);
 			}
 			fprintf(fp, "\n");
 		}
@@ -242,9 +242,9 @@ int main()
 }
 
 
-void Physicial_Parameters(float T)
+void Physicial_Parameters(double T)
 {
-	float Ts = 1462.0, Tl = 1518.0, lamds = 30, lamdl = 50, phos = 7000, phol = 7500, ce = 540.0, L = 265600.0, fs = 0.0;
+	double Ts = 1462.0, Tl = 1518.0, lamds = 30, lamdl = 50, phos = 7000, phol = 7500, ce = 540.0, L = 265600.0, fs = 0.0;
 	if (T < Ts)
 	{
 		fs = 0;
@@ -271,10 +271,10 @@ void Physicial_Parameters(float T)
 
 }
 
-float Boundary_Condition(int j, int ny, float Ly, float *ccml_zone, float *H_Init)
+double Boundary_Condition(int j, int ny, double Ly, double *ccml_zone, double *H_Init)
 {
-	float YLabel, h;
-	YLabel = (j * Ly) / float(ny - 1);
+	double YLabel, h;
+	YLabel = (j * Ly) / double(ny - 1);
 
 	for (int i = 0; i < Section; i++)
 	{
@@ -289,7 +289,7 @@ float Boundary_Condition(int j, int ny, float Ly, float *ccml_zone, float *H_Ini
 void Monitor_MeanTemperature(int ny, int nx, int *Y_Label)
 {
 
-	float temp_surface[Section] = { 0.0 }, temp_central[Section] = { 0.0 };
+	double temp_surface[Section] = { 0.0 }, temp_central[Section] = { 0.0 };
 	for (int j = 0; j < ny; j++)
 		for (int i = 0; i < Section; i++)
 			if (j > *(Y_Label + i) && j <= *(Y_Label + i + 1))
@@ -316,9 +316,9 @@ void Monitor_MeanTemperature(int ny, int nx, int *Y_Label)
 
 
 
-void OnestepSolve(int nx, int ny, float tao, float dx, float dy, float* H_Init)
+void OnestepSolve(int nx, int ny, double tao, double dx, double dy, double* H_Init)
 {
-	float T_Up, T_Down, T_Right, T_Left;
+	double T_Up, T_Down, T_Right, T_Left;
 
 		for (int j = 0; j < ny; j++)
 		{
