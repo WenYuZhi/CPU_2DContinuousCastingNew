@@ -1,2 +1,2 @@
-# CPU_2DContinuousCastingNew
-New version of 2d continuous casting model
+# continuousCasting2DHeatEquation
+Continuous casting is a kind of heat transfer model. Heat transfer model can be described by partial differential equations.
